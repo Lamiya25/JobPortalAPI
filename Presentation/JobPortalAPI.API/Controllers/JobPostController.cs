@@ -36,7 +36,7 @@ namespace JobPortalAPI.API.Controllers
         [HttpGet("[action]/{Id}")]
         public async Task<IActionResult> GetJobPost(string Id, bool isDelete)
         {
-            var data = await _jobPostService.GetJobPostById(Id, isDelete);
+            var data = await _jobPostService.GetJobPostById(Id);
             return StatusCode(data.StatusCode, data);
         }
         [HttpGet("[action]/{Id}")]

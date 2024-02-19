@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JobPortalAPI.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240211133325_casca")]
-    partial class casca
+    [Migration("20240219171110_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -69,13 +69,13 @@ namespace JobPortalAPI.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "adf73adb-1cd6-458e-83cf-7f06211f1451",
+                            Id = "421262f3-2e97-4499-83ea-1bc965f04d14",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "d9965d91-3d0a-4d93-bc60-0853201b0804",
+                            Id = "e7cafaaf-8b79-434b-b44d-ac937e573a5c",
                             Name = "User",
                             NormalizedName = "USER"
                         });
@@ -168,10 +168,10 @@ namespace JobPortalAPI.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "180e5606-cc70-413e-b505-95450085835d",
+                            Id = "dd916a9f-43e0-4a46-bdbb-02a868e254e5",
                             AccessFailedCount = 0,
-                            BirthDate = new DateTime(2024, 2, 11, 13, 33, 24, 949, DateTimeKind.Utc).AddTicks(2824),
-                            ConcurrencyStamp = "8b5c660c-7cd5-49b3-8e24-94ccf482f8d7",
+                            BirthDate = new DateTime(2024, 2, 19, 17, 11, 10, 230, DateTimeKind.Utc).AddTicks(9397),
+                            ConcurrencyStamp = "3abc3d70-8999-41bf-9c7a-d2c44447a8a2",
                             Email = "admin@example.com",
                             EmailConfirmed = true,
                             FirstName = "default",
@@ -179,9 +179,9 @@ namespace JobPortalAPI.Persistence.Migrations
                             LockoutEnabled = true,
                             NormalizedEmail = "ADMIN@EXAMPLE.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIQnb91KSQcmp7a/REexTUNDh83nqGbfC5DI7MjO7Dr/gAQ/7PTwcpbeg8i9zmozKw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHvEnDRqD89ui83DsEGh+OtoQjxaz/41UbqHHOi9wL5RiEgMkT9hJ4k4i42ycXMSpQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "7d20d2ae-782e-41d0-8779-cf7ae947ae72",
+                            SecurityStamp = "0b37ded8-d0c5-4db9-80c5-74566645e45e",
                             TwoFactorEnabled = false,
                             UserName = "Admin"
                         });
@@ -341,11 +341,14 @@ namespace JobPortalAPI.Persistence.Migrations
                     b.Property<Guid>("LocationID")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<float?>("MaxSalary")
+                        .HasColumnType("real");
+
+                    b.Property<float?>("MinSalary")
+                        .HasColumnType("real");
+
                     b.Property<DateTime>("PublishedDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<float>("Salary")
-                        .HasColumnType("real");
 
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("datetime2");
@@ -563,8 +566,8 @@ namespace JobPortalAPI.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = "180e5606-cc70-413e-b505-95450085835d",
-                            RoleId = "adf73adb-1cd6-458e-83cf-7f06211f1451"
+                            UserId = "dd916a9f-43e0-4a46-bdbb-02a868e254e5",
+                            RoleId = "421262f3-2e97-4499-83ea-1bc965f04d14"
                         });
                 });
 

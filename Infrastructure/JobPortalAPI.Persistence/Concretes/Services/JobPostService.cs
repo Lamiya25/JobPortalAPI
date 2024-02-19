@@ -211,9 +211,9 @@ namespace JobPortalAPI.Persistence.Concretes.Services
         }
 
 
-        public async Task<Response<JobPostGetDTO>> GetJobPostById(string id, bool isDelete)
+        public async Task<Response<JobPostGetDTO>> GetJobPostById(string id)
         {
-            var data = await _jobPostReadRepository.GetByIdAsync(id, isDelete);
+            var data = await _jobPostReadRepository.GetByIdAsync(id);
 
             if (data != null)
             {

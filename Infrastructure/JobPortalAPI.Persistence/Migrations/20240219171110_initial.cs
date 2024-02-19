@@ -270,7 +270,8 @@ namespace JobPortalAPI.Persistence.Migrations
                     JobTitle = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     JobDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     EmploymentType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Salary = table.Column<float>(type: "real", nullable: false),
+                    MinSalary = table.Column<float>(type: "real", nullable: true),
+                    MaxSalary = table.Column<float>(type: "real", nullable: true),
                     ApplicationDeadline = table.Column<DateTime>(type: "datetime2", nullable: false),
                     PublishedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CompanyID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -288,7 +289,7 @@ namespace JobPortalAPI.Persistence.Migrations
                         column: x => x.CategoryID,
                         principalTable: "Categories",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_JobPosts_Companies_CompanyID",
                         column: x => x.CompanyID,
@@ -299,8 +300,7 @@ namespace JobPortalAPI.Persistence.Migrations
                         name: "FK_JobPosts_Locations_LocationID",
                         column: x => x.LocationID,
                         principalTable: "Locations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -362,19 +362,19 @@ namespace JobPortalAPI.Persistence.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "609606b9-6e74-4169-8315-1ae3667a05ea", null, "User", "USER" },
-                    { "9db70841-b4a9-42f6-b423-0acbd13ec5fd", null, "Admin", "ADMIN" }
+                    { "421262f3-2e97-4499-83ea-1bc965f04d14", null, "Admin", "ADMIN" },
+                    { "e7cafaaf-8b79-434b-b44d-ac937e573a5c", null, "User", "USER" }
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "BirthDate", "ConcurrencyStamp", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "RefreshToken", "RefreshTokenExpires", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "926c66b1-cc8b-4144-86ca-6b54b4838a4f", 0, new DateTime(2024, 2, 10, 15, 55, 12, 745, DateTimeKind.Utc).AddTicks(6992), "f53269dd-789c-4ec7-aaed-3a434dcc1709", "admin@example.com", true, "default", "default", true, null, "ADMIN@EXAMPLE.COM", "ADMIN", "AQAAAAIAAYagAAAAEHcGJw62h/suloGNC5G31nebISk+MONkRPLgKMIPM4j0PNQh4CJUPjJ7XSQSHzR9vQ==", null, false, null, null, "e8a009a1-71bf-4ac4-85a4-fd470bbbce81", false, "Admin" });
+                values: new object[] { "dd916a9f-43e0-4a46-bdbb-02a868e254e5", 0, new DateTime(2024, 2, 19, 17, 11, 10, 230, DateTimeKind.Utc).AddTicks(9397), "3abc3d70-8999-41bf-9c7a-d2c44447a8a2", "admin@example.com", true, "default", "default", true, null, "ADMIN@EXAMPLE.COM", "ADMIN", "AQAAAAIAAYagAAAAEHvEnDRqD89ui83DsEGh+OtoQjxaz/41UbqHHOi9wL5RiEgMkT9hJ4k4i42ycXMSpQ==", null, false, null, null, "0b37ded8-d0c5-4db9-80c5-74566645e45e", false, "Admin" });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
                 columns: new[] { "RoleId", "UserId", "Discriminator" },
-                values: new object[] { "9db70841-b4a9-42f6-b423-0acbd13ec5fd", "926c66b1-cc8b-4144-86ca-6b54b4838a4f", "AppUserRoles" });
+                values: new object[] { "421262f3-2e97-4499-83ea-1bc965f04d14", "dd916a9f-43e0-4a46-bdbb-02a868e254e5", "AppUserRoles" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Applications_JobPostID",

@@ -8,7 +8,8 @@ namespace JobPortalAPI.Application.DTOs.JobPostDTOs
         public string JobTitle { get; set; }
         public string JobDescription { get; set; }
         public string EmploymentType { get; set; }
-        public float Salary { get; set; }
+        public float? MinSalary { get; set; }
+        public float? MaxSalary { get; set; }
         public DateTime ApplicationDeadline { get; set; }
     }
 

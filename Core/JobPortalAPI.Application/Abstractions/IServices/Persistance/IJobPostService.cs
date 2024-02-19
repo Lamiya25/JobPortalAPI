@@ -13,7 +13,7 @@ namespace JobPortalAPI.Application.Abstractions.IServices.Persistance
         Task<Response<bool>>UpdateJobPost(JobPostUpdateDTO jobPostUpdateDTO);
 
         Task<Response<List<JobPostGetDTO>>> GetAllJobPosts(bool isDelete=false);
-        Task<Response<JobPostGetDTO>>GetJobPostById(string id, bool isDelete);
+        Task<Response<JobPostGetDTO>>GetJobPostById(string id);
 
         Task<Response<bool>>ApplyToJob(String userId, string jobId, ApplicationDTO applicationDTO);
         Task<Response<List<ApplicationDTO>>>GetApplicationsForJob(string  jobId, bool isDelete);
