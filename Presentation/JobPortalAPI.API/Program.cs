@@ -1,7 +1,7 @@
 using FluentValidation.AspNetCore;
 using JobPortalAPI.API.Registrations;
 using JobPortalAPI.Application.AutoMapper;
-using JobPortalAPI.Application.Validators.UserValid;
+using JobPortalAPI.Application.Validators;
 using JobPortalAPI.Infrastructure.Registration;
 using JobPortalAPI.Persistence.Registration;
 using Serilog.Events;

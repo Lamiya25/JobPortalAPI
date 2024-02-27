@@ -4,6 +4,7 @@ using JobPortalAPI.Application.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using JobPortalAPI.Persistence.Concretes.Services;
+using JobPortalAPI.Application.RequestParameters;
 
 namespace JobPortalAPI.API.Controllers
 {
@@ -29,6 +30,13 @@ namespace JobPortalAPI.API.Controllers
         public async Task<IActionResult> SearchJobsBySkill(string skillName)
         {
             var data = await _service.SearchJobsBySkill(skillName);
+            return StatusCode(data.StatusCode, data);
+        }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> SearchJobsBySkillPagination(string skillName, [FromQuery] Pagination pagination)
+        {
+            var data = await _service.SearchJobsBySkillPagination(skillName, pagination);
             return StatusCode(data.StatusCode, data);
         }
 

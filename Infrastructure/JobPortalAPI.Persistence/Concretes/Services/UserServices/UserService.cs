@@ -1,11 +1,15 @@
 ﻿using AutoMapper;
+using JobPortalAPI.Application.Abstractions.IServices.Persistance;
 using JobPortalAPI.Application.Abstractions.IServices.Persistance.IUserServices;
 using JobPortalAPI.Application.DTOs.UserDTOs;
 using JobPortalAPI.Application.Exceptions.PasswordExceptions;
 using JobPortalAPI.Application.Exceptions.UserExceptions;
 using JobPortalAPI.Application.Helpers;
 using JobPortalAPI.Application.Models.ResponseModels;
+using JobPortalAPI.Application.Validators;
 using JobPortalAPI.Domain.Entities.Identity;
+using JobPortalAPI.Domain.Entities.JobPortalDBContext;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +19,12 @@ using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using FluentValidation;
 using System.Threading.Tasks;
+using FluentValidation.Results;
+using JobPortalAPI.Application.Consts;
+using Microsoft.AspNetCore.Http.HttpResults;
+using JobPortalAPI.Persistence.Context;
 
 namespace JobPortalAPI.Persistence.Concretes.Services.UserServices
 {
@@ -23,49 +32,62 @@ namespace JobPortalAPI.Persistence.Concretes.Services.UserServices
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly IMapper _mapper;
-
-        public UserService(UserManager<AppUser> userManager, IMapper mapper)
+        private readonly IFileService _fileService;
+        private readonly AppDbContext _context;
+        public UserService(UserManager<AppUser> userManager, IMapper mapper, IFileService fileService, AppDbContext context = null)
         {
             _userManager = userManager;
             _mapper = mapper;
+            _fileService = fileService;
+            _context = context;
         }
 
         public async Task<Response<CreateUserResponseDTO>> CreateAsync(CreateUserDTO createUser)
         {
-            var id = Guid.NewGuid().ToString();
-
-            IdentityResult result = await _userManager.CreateAsync(new()
+            try
             {
-                Id = id,
-                UserName = createUser.UserName,
-                FirstName = createUser.FirstName,
-                LastName = createUser.LastName,
-                Email = createUser.Email,
-                BirthDate = createUser.BirthDate,
-                PhoneNumber = createUser.PhoneNumber
-            }, createUser.Password);
+                AppUser appUser = _mapper.Map<AppUser>(createUser);
+            appUser.Id = Guid.NewGuid().ToString();
+            ValidationResult vResult = await ValidateUserAsync(appUser);
 
-            var response = new Response<CreateUserResponseDTO>
+
+            if (await IsEmailExist(appUser.Email))
+                return new Response<CreateUserResponseDTO>
+                {
+                    Data = new CreateUserResponseDTO { Succeeded = false, Errors = new List<string> { Messages.UsedEmailMessage } },
+                    StatusCode = 400
+                };
+
+            if (vResult.IsValid)
             {
-                Data = new CreateUserResponseDTO { Succeeded = result.Succeeded },
-                StatusCode = result.Succeeded ? 200 : 400
+                IdentityResult result = await _userManager.CreateAsync(appUser, createUser.Password);
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(appUser, "User");
+                    return new Response<CreateUserResponseDTO>
+                    {
+                        Data = new CreateUserResponseDTO { Succeeded = true },
+                        StatusCode = 200
+                    };
+                }
+                return new Response<CreateUserResponseDTO>
+                {
+                    Data = new CreateUserResponseDTO { Succeeded = false, Errors = result.Errors.Select(x => x.Description).ToList() },
+                    StatusCode = 400
+                };
+            }
+            return new Response<CreateUserResponseDTO>
+            {
+                Data = new CreateUserResponseDTO { Succeeded = false, Errors = vResult.Errors.Select(x => x.ErrorMessage).ToList() },
+                StatusCode = 400
             };
-            if (!result.Succeeded)
-            {
-                response.Data.Message = string.Join(" \n ", result.Errors.Select(error => $"{error.Code} - {error.Description}"));
-            }
-
-            AppUser user = await _userManager.FindByNameAsync(createUser.UserName);
-            if (user == null)
-            {
-                user = await _userManager.FindByEmailAsync(id);
-            }
-            if (user != null)
-            {
-                await _userManager.AddToRoleAsync(user, "User");
-            }
-            return response;
         }
+            catch (Exception ex)
+            {
+                throw new Application.Exceptions.OperationalException.InvalidOperationException(ex.Message, ex.InnerException);
+            }
+        }
+        private async Task<bool> IsEmailExist(string email) => await _context.Users.AnyAsync(x => x.Email == email);
 
         public async Task UpdateRefreshToken(string refreshToken, AppUser user, DateTime accessTokenDate, int addOnAccessTokenDate)
         {
@@ -155,48 +177,6 @@ namespace JobPortalAPI.Persistence.Concretes.Services.UserServices
                 throw new Application.Exceptions.OperationalException.InvalidOperationException(ex.Message, ex.InnerException);
             }
         }
-        /*        public async Task<Response<bool>> AssignRoleToUserAsync(string userID, string[] roles)
-                {
-                    try
-                    {
-                        // Kullanıcıyı bul
-                        AppUser user = await _userManager.FindByIdAsync(userID);
-
-                        if (user == null)
-                        {
-                            return new Response<bool> { Data = false, StatusCode = 400 }; // Kullanıcı bulunamadı
-                        }
-
-                        // Kullanıcının mevcut rollerini al
-                        var userRoles = await _userManager.GetRolesAsync(user);
-
-                        // Kullanıcıyı mevcut rollerinden kaldır
-
-                        // Yeni rolleri kullanıcıya ekle
-                        await _userManager.RemoveFromRolesAsync(user, userRoles.ToArray());
-                        IdentityResult result = await _userManager.AddToRolesAsync(user, roles);
-
-                        if (result.Succeeded)
-                        {
-                          // Yeni rolleri token'ın içine ekleyin
-                            foreach (var role in roles)
-                            {
-                                await ReplaceClaimAsync(user, new Claim(ClaimTypes.Role, role), new Claim(ClaimTypes.Role, role));
-                            }
-
-                            return new Response<bool> { Data = true, StatusCode = 200 }; // Rol atama başarılı
-                        }
-                        else
-                        {
-                            return new Response<bool> { Data = false, StatusCode = 400 }; // Rol atama başarısız
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Application.Exceptions.OperationalException.InvalidOperationException(ex.Message, ex.InnerException);
-                    }
-                }*/
-
 
         public async Task<Response<string[]>> GetRolesToUserAsync(string userIdOrName)
         {
@@ -310,35 +290,69 @@ namespace JobPortalAPI.Persistence.Concretes.Services.UserServices
 
         public async Task<IdentityResult> ReplaceClaimAsync(AppUser user, Claim claim, Claim newClaim)
         {
-            // Kullanıcı nesnesi null değilse devam et
             if (user != null)
             {
-                // Kullanıcının mevcut taleplerini al
                 var userClaims = await _userManager.GetClaimsAsync(user);
 
-                // Değiştirilecek talebin kullanıcı talepleri arasında olup olmadığını kontrol et
                 if (userClaims.Any(c => c.Type == claim.Type && c.Value == claim.Value))
                 {
-                    // Mevcut talebi kaldır
                     await _userManager.RemoveClaimAsync(user, claim);
 
-                    // Yeni talebi ekle
                     await _userManager.AddClaimAsync(user, newClaim);
 
-                    // İşlem başarılı ise IdentityResult.Success döndür
                     return IdentityResult.Success;
                 }
                 else
                 {
-                    // Değiştirilecek talep bulunamadıysa hata döndür
                     return IdentityResult.Failed(new IdentityError { Description = "Specified claim not found for user" });
                 }
             }
             else
             {
-                // Kullanıcı nesnesi null ise hata döndür
                 return IdentityResult.Failed(new IdentityError { Description = "User cannot be null" });
             }
         }
+        public async Task UploadProfileImageAsync(string userId, IFormFile file)
+        {
+            AppUser user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                throw new NotFoundUserException();
+            }
+            if (user.ProfileImageId != null)
+            {
+                await DeleteProfileImageAsync(userId);
+            }
+            ProfileImage profileImage = await _fileService.WriteProfileImageAsync(file);
+
+            user.ProfileImageId=profileImage.Id;
+
+            await _userManager.UpdateAsync(user);
+        }
+
+
+        public async Task<Response<bool>> DeleteProfileImageAsync(string userId)
+        {
+            AppUser user= await _userManager.FindByIdAsync(userId);
+
+            user.ProfileImageId = null;
+            await _userManager.UpdateAsync(user);
+
+            return new Response<bool>
+            {
+                Data = true,
+                StatusCode = 200
+            };
+        }
+
+        private async Task<ValidationResult> ValidateUserAsync(AppUser user)
+        {
+            CreateUserValidator validationRules = new();
+
+            ValidationResult result = await validationRules.ValidateAsync(user);
+            return result;
+
+        }
+
     }
 }

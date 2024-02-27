@@ -27,6 +27,8 @@ namespace JobPortalAPI.Persistence.Context
         public DbSet<Skill> Skills { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<BaseFile> BaseFiles { get; set; }
+        public DbSet<ProfileImage> ProfileImages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

@@ -20,6 +20,9 @@ namespace JobPortalAPI.Domain.Entities.Identity
 
         public List<Application> Applications { get; set; }
         public List<Skill> Skills { get; set; }
+
+        public ProfileImage? ProfileImage { get; set; }
+        public Guid? ProfileImageId { get; set; }
     }
 
     public class AppRole:IdentityRole<string> { }

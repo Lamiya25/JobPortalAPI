@@ -1,5 +1,6 @@
 ﻿using JobPortalAPI.Application.Abstractions.IServices.Persistance.IUserServices;
 using JobPortalAPI.Application.DTOs.UserDTOs;
+using JobPortalAPI.Domain.Entities.JobPortalDBContext;
 using JobPortalAPI.Persistence.Concretes.Services.UserServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -68,5 +69,13 @@ namespace JobPortalAPI.API.Controllers
             var data = await _userService.DeleteUserAsync(UserIdOrName);
             return StatusCode(data.StatusCode, data);
         }
+
+        [HttpPut("[action]")]
+        public async Task<IActionResult> UpdateUserProfile(string userId, IFormFile file)
+        {
+            await _userService.UploadProfileImageAsync(userId, file);
+            return Ok(file);
+        }
+
     }
 }

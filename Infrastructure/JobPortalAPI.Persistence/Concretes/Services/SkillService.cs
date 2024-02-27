@@ -8,6 +8,7 @@ using JobPortalAPI.Application.Enums;
 using JobPortalAPI.Application.Exceptions;
 using JobPortalAPI.Application.Models.ResponseModels;
 using JobPortalAPI.Application.Repositories;
+using JobPortalAPI.Application.RequestParameters;
 using JobPortalAPI.Application.UnitOfWork;
 using JobPortalAPI.Domain.Entities.Identity;
 using JobPortalAPI.Domain.Entities.JobPortalDBContext;
@@ -144,6 +145,29 @@ namespace JobPortalAPI.Persistence.Concretes.Services
             };
 
             throw new GenericCustomException<ExceptionDTO>(CustomExceptionMessages.AnyEntityOperationFailed(Enum.GetName(typeof(ActionType), 0), nameof(JobPost)));
+        }
+
+        public async Task<Response<List<JobPostGetDTO>>> SearchJobsBySkillPagination(string skillName, Pagination pagination)
+        {
+            var query = appDbContext.JobPosts
+                .Where(j => j.RequiredSkills.Any(js => js.SkillName == skillName))
+                .OrderByDescending(j => j.CreateDate);
+
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalCount / pagination.Size);
+
+            var jobPosts = await query
+                .Skip(pagination.Page * pagination.Size)
+                .Take(pagination.Size)
+                .ToListAsync();
+
+            var jobPostDTos = _mapper.Map<List<JobPostGetDTO>>(jobPosts);
+
+            return new Response<List<JobPostGetDTO>>
+            {
+                Data = jobPostDTos,
+                StatusCode = 200
+            };
         }
     }
 }

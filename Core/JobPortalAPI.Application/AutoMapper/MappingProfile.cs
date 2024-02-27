@@ -21,7 +21,9 @@ namespace JobPortalAPI.Application.AutoMapper
     {
         public MappingProfile()
         {
-            CreateMap<AppUser, UserGetDTO>();
+            CreateMap<CreateUserDTO, AppUser>().ReverseMap();
+
+            CreateMap<AppUser, UserGetDTO>().ReverseMap();
             CreateMap<JobPostCreateDTO, JobPost>()
                 .ForMember(dest => dest.RequiredSkills, opt => opt.MapFrom(src => src.RequiredSkills));
 
@@ -49,6 +51,7 @@ namespace JobPortalAPI.Application.AutoMapper
 
 
             CreateMap<Skill, SkillDTO>().ReverseMap();
+
 
         }
     }

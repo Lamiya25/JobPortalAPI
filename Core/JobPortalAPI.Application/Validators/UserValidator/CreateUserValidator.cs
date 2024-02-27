@@ -1,15 +1,16 @@
 ﻿using FluentValidation;
 using JobPortalAPI.Application.Consts;
 using JobPortalAPI.Application.Models.ViewModels;
+using JobPortalAPI.Domain.Entities.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JobPortalAPI.Application.Validators.UserValid
+namespace JobPortalAPI.Application.Validators
 {
-    public class CreateUserValidator:AbstractValidator<VMUser>
+    public class CreateUserValidator:AbstractValidator<AppUser>
     {
         public CreateUserValidator() 
         {
@@ -26,7 +27,7 @@ namespace JobPortalAPI.Application.Validators.UserValid
                                     .WithMessage(Messages.MaximumUsernameSymbolMessage);
 
             RuleFor(x => x.BirthDate).NotNull().NotEmpty();
-            //+XXX (XX) XXXX XXX XXX
+            //+XXX (XX) XXX XX XX
             RuleFor(x => x.PhoneNumber)
            .Cascade(CascadeMode.Stop)
            .NotEmpty().WithMessage(Messages.EmptyPhoneNumberMessage)

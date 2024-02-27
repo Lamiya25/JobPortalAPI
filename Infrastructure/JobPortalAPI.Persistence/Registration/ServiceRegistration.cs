@@ -1,11 +1,14 @@
 ﻿using JobPortalAPI.Application.Abstractions.IServices.Persistance;
 using JobPortalAPI.Application.Abstractions.IServices.Persistance.AuthenticationServices;
+using JobPortalAPI.Application.Abstractions.IServices.Persistance.IStorage;
 using JobPortalAPI.Application.Abstractions.IServices.Persistance.IUserServices;
 using JobPortalAPI.Application.Repositories;
 using JobPortalAPI.Application.Repositories.Category;
+using JobPortalAPI.Application.Repositories.ProfileImages;
 using JobPortalAPI.Application.UnitOfWork;
 using JobPortalAPI.Domain.Entities.Identity;
 using JobPortalAPI.Persistence.Concretes.Services;
+using JobPortalAPI.Persistence.Concretes.Services.ProfileImages;
 using JobPortalAPI.Persistence.Concretes.Services.UserServices;
 using JobPortalAPI.Persistence.Configuration;
 using JobPortalAPI.Persistence.Context;
@@ -42,6 +45,7 @@ namespace JobPortalAPI.Persistence.Registration
 
             services.AddScoped<IApplicationReadRepository, ApplicationReadRepository>();
             services.AddScoped<IApplicationWriteRepository, ApplicationWriteRepository>();
+            services.AddScoped<IProfileImageWriteRepository,ProfileImageWriteRepository>();
 
             services.AddScoped<ICompanyReadRepository, CompanyReadRepository>();
             services.AddScoped<ICompanyWriteRepository, CompanyWriteRepository>();
@@ -67,6 +71,8 @@ namespace JobPortalAPI.Persistence.Registration
             services.AddScoped<ILocationService, LocationService>();
             services.AddScoped<ISkillService, SkillService>();
             services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IFileService, FileService>();
+            
 
 
         }
