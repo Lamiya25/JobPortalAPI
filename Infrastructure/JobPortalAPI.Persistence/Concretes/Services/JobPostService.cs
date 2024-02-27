@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using FluentValidation;
+using FluentValidation.Results;
 using JobPortalAPI.Application.Abstractions.IServices.Persistance;
 using JobPortalAPI.Application.DTOs;
 using JobPortalAPI.Application.DTOs.ApplicationDTOs;
@@ -10,12 +12,14 @@ using JobPortalAPI.Application.Exceptions.JobPostExceptions;
 using JobPortalAPI.Application.Models.ResponseModels;
 using JobPortalAPI.Application.Repositories;
 using JobPortalAPI.Application.UnitOfWork;
+using JobPortalAPI.Application.Validators.JobPostValidator;
 using JobPortalAPI.Domain.Entities.JobPortalDBContext;
 using JobPortalAPI.Persistence.Repositories;
 using JobPortalAPI.Persistence.UnitOfWork;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
@@ -44,45 +48,57 @@ namespace JobPortalAPI.Persistence.Concretes.Services
             _mapper = mapper;
                 
         }
-
         public async Task<Response<JobPostCreateDTO>> AddJobPost(JobPostCreateDTO jobPostCreateDTO)
         {
-            if (jobPostCreateDTO != null)
+            // Validate the job post
+            var validationResult = await ValidatePostAsync(jobPostCreateDTO);
+
+            if (validationResult.IsValid)
             {
-                var company = await _companyReadRepository.GetByIdAsync(jobPostCreateDTO.CompanyID.ToString());
-                if (company == null)
+                if (jobPostCreateDTO != null)
+                {
+                    var company = await _companyReadRepository.GetByIdAsync(jobPostCreateDTO.CompanyID.ToString());
+                    if (company == null)
+                    {
+                        return new Response<JobPostCreateDTO>
+                        {
+                            Data = jobPostCreateDTO,
+                            StatusCode = 400
+                        };
+                    }
+
+                    var jobPostEntity = _mapper.Map<JobPost>(jobPostCreateDTO);
+                    jobPostEntity.Company = company;
+                    jobPostEntity.RequiredSkills = jobPostCreateDTO.RequiredSkills.Select(skillDto =>
+                        new Skill
+                        {
+                            SkillName = skillDto.SkillName,
+                            SkillDescription = skillDto.SkillDescription,
+                        }).ToList();
+
+                    await _jobPostWriteRepository.AddAsync(jobPostEntity);
+
+                    int result = await _unitOfWork.SaveChangesAsync();
+                    if (result > 0)
+                    {
+                        return new Response<JobPostCreateDTO>
+                        {
+                            Data = jobPostCreateDTO,
+                            StatusCode = 201
+                        };
+                    }
+                    else
+                    {
+                        throw new GenericCustomException<ExceptionDTO>(CustomExceptionMessages.AnyEntityOperationFailed(Enum.GetName(typeof(ActionType), 1), nameof(JobPost)));
+                    }
+                }
+                else
                 {
                     return new Response<JobPostCreateDTO>
                     {
                         Data = jobPostCreateDTO,
                         StatusCode = 400
                     };
-
-                }
-                var jobPostEntity = _mapper.Map<JobPost>(jobPostCreateDTO);
-                jobPostEntity.Company = company;
-                jobPostEntity.RequiredSkills = jobPostCreateDTO.RequiredSkills.Select(skillDto =>
-           new Skill
-           {
-               SkillName = skillDto.SkillName,
-               SkillDescription = skillDto.SkillDescription,
-           }).ToList();
-
-
-                await _jobPostWriteRepository.AddAsync(jobPostEntity);
-
-                int result = await _unitOfWork.SaveChangesAsync();
-                if (result > 0)
-                {
-                    return new Response<JobPostCreateDTO>
-                    {
-                        Data = jobPostCreateDTO,
-                        StatusCode = 201
-                    };
-                }
-                else
-                {
-                    throw new GenericCustomException<ExceptionDTO>(CustomExceptionMessages.AnyEntityOperationFailed(Enum.GetName(typeof(ActionType), 1), nameof(JobPost)));
                 }
             }
             else
@@ -90,11 +106,17 @@ namespace JobPortalAPI.Persistence.Concretes.Services
                 return new Response<JobPostCreateDTO>
                 {
                     Data = jobPostCreateDTO,
-                    StatusCode = 400
+                    StatusCode = 422, 
                 };
             }
 
             throw new GenericCustomException<ExceptionDTO>(CustomExceptionMessages.AnyEntityOperationFailed(Enum.GetName(typeof(ActionType), 1), nameof(JobPost)));
+        }
+
+        private async Task<ValidationResult> ValidatePostAsync(JobPostCreateDTO jobPost)
+        {
+            JobPostCreateDtoValidator validationRules = new();
+            return await validationRules.ValidateAsync(jobPost);
         }
 
         public async Task<Response<bool>> ApplyToJob(string userId, string jobId, ApplicationDTO applicationDTO)
@@ -238,32 +260,49 @@ namespace JobPortalAPI.Persistence.Concretes.Services
 
         public async Task<Response<bool>> UpdateJobPost(JobPostUpdateDTO jobPostUpdateDTO)
         {
-            var data = await _jobPostReadRepository.GetByIdAsync(jobPostUpdateDTO.JobId);
-            if (data != null)
+            var validationResult = await ValidateUpdateAsync(jobPostUpdateDTO);
+            if (validationResult.IsValid)
             {
-                _jobPostWriteRepository.Update(data);
-                int result = await _unitOfWork.SaveChangesAsync();
-
-                if (result == 1)
+                var data = await _jobPostReadRepository.GetByIdAsync(jobPostUpdateDTO.JobId);
+                if (data != null)
                 {
-                    return new Response<bool>
+                    _jobPostWriteRepository.Update(data);
+                    int result = await _unitOfWork.SaveChangesAsync();
+
+                    if (result == 1)
                     {
-                        Data = true,
-                        StatusCode = 200
-                    };
+                        return new Response<bool>
+                        {
+                            Data = true,
+                            StatusCode = 200
+                        };
+                    }
+                    else
+                    {
+                        throw new GenericCustomException<ExceptionDTO>(CustomExceptionMessages.AnyEntityOperationFailed(Enum.GetName(typeof(ActionType), 2), nameof(JobPost)));
+                    }
+
                 }
                 else
-                {
-                    throw new GenericCustomException<ExceptionDTO>(CustomExceptionMessages.AnyEntityOperationFailed(Enum.GetName(typeof(ActionType), 2), nameof(JobPost)));
-                }
-
+                    return new Response<bool> { Data = false, StatusCode = 404 };
             }
             else
-                return new Response<bool> { Data = false, StatusCode = 404 };
+            {
+                return new Response<bool>
+                {
+                    Data = false,
+                    StatusCode = 422, // Unprocessable Entity status code
+                };
+            }
 
             throw new GenericCustomException<ExceptionDTO>(CustomExceptionMessages.AnyEntityOperationFailed(Enum.GetName(typeof(ActionType), 2), nameof(JobPost)));
         }
 
+        private async Task<ValidationResult> ValidateUpdateAsync(JobPostUpdateDTO jobPostUpdateDTO)
+        {
+            JobPostUpdateDTOValidator validationRules = new JobPostUpdateDTOValidator();
+            return await validationRules.ValidateAsync(jobPostUpdateDTO);
+        }
         public async Task<Response<List<ApplicationDTO>>> GetApplicationsForJob(string jobId, bool isDelete)
         {
             var jobPost=await _jobPostReadRepository.GetByIdAsync(jobId.ToString(),false, isDelete);
@@ -295,11 +334,12 @@ namespace JobPortalAPI.Persistence.Concretes.Services
                 };
             }
             throw new GenericCustomException<ExceptionDTO>(CustomExceptionMessages.AnyEntityOperationFailed(Enum.GetName(typeof(ActionType), 0), nameof(JobPost)));
-    }
+        }
 
         public Task<Response<bool>> SaveJobPost(string userId, string jobPostID)
         {
             throw new NotImplementedException();
         }
+       
     }
 }
