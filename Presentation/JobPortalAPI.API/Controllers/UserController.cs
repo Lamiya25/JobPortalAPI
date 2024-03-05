@@ -77,5 +77,12 @@ namespace JobPortalAPI.API.Controllers
             return Ok(file);
         }
 
+        [HttpDelete("[action]")]
+        public async Task<IActionResult> DeleteProfileImage(string userId)
+        {
+            var data = await _userService.DeleteProfileImageAsync(userId);
+            return StatusCode(data.StatusCode, data);
+        }
+
     }
 }

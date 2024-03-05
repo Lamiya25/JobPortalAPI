@@ -25,4 +25,8 @@
     <ProjectReference Include="..\..\Infrastructure\JobPortalAPI.Persistence\JobPortalAPI.Persistence.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="uploads\userImages\" />
+  </ItemGroup>
+
 </Project>

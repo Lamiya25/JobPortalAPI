@@ -29,7 +29,18 @@ namespace JobPortalAPI.Persistence.Concretes.Services
 
             Guid profileImageId = Guid.NewGuid();
 
-            ProfileImage profileImage = await _profileImageWrite.AddAsyncProfilePhoto(new ProfileImage
+            /* ProfileImage profileImage = await _profileImageWrite.AddAsyncProfilePhoto(new ProfileImage
+             {
+                 Id = profileImageId,
+                 FileName = storageInfo.fileName,
+                 Path = storageInfo.pathName,
+                 Storage = _storageService.StorageName,
+                 CreateDate = DateTime.Now,
+                 UpdateDate = DateTime.Now,
+                 IsDeleted = false
+             });
+ */
+            ProfileImage profileImage = new ProfileImage
             {
                 Id = profileImageId,
                 FileName = storageInfo.fileName,
@@ -38,7 +49,9 @@ namespace JobPortalAPI.Persistence.Concretes.Services
                 CreateDate = DateTime.Now,
                 UpdateDate = DateTime.Now,
                 IsDeleted = false
-            });
+            };
+
+            await _profileImageWrite.AddAsyncProfilePhoto(profileImage);
 
             await _profileImageWrite.SaveAsync();
             return profileImage;
